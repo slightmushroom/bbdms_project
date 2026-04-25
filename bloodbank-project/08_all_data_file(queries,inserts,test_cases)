@@ -1,0 +1,1435 @@
+CREATE TABLE component (
+    component_id NUMBER PRIMARY KEY,
+    name VARCHAR2(50) NOT NULL,
+    shelf_life_days NUMBER(4) NOT NULL,
+    storage_temp_min NUMBER(4,1) NOT NULL,
+    storage_temp_max NUMBER(4,1) NOT NULL,
+    description VARCHAR2(200),
+    CONSTRAINT chk_component_shelf CHECK (shelf_life_days BETWEEN 1 AND 400),
+    CONSTRAINT chk_component_temp CHECK (storage_temp_min < storage_temp_max)
+);
+
+
+INSERT INTO component (component_id, name, shelf_life_days, storage_temp_min, storage_temp_max, description)
+VALUES (1, 'Whole Blood', 35, 2.0, 6.0, 'Unseparated blood, refrigerated. Rarely used directly today.');
+
+INSERT INTO component (component_id, name, shelf_life_days, storage_temp_min, storage_temp_max, description)
+VALUES (2, 'Packed Red Blood Cells', 42, 2.0, 6.0, 'Red cells separated from plasma. Most commonly transfused component.');
+
+INSERT INTO component (component_id, name, shelf_life_days, storage_temp_min, storage_temp_max, description)
+VALUES (3, 'Platelets', 5, 20.0, 24.0, 'Stored at room temperature with continuous agitation. Very short shelf life.');
+
+INSERT INTO component (component_id, name, shelf_life_days, storage_temp_min, storage_temp_max, description)
+VALUES (4, 'Fresh Frozen Plasma', 365, -30.0, -25.0, 'Plasma frozen within 8 hours of collection. Stored below -25 degrees Celsius.');
+
+INSERT INTO component (component_id, name, shelf_life_days, storage_temp_min, storage_temp_max, description)
+VALUES (5, 'Cryoprecipitate', 365, -30.0, -25.0, 'Cold-precipitated plasma fraction rich in clotting factors.');
+
+COMMIT;
+
+
+SELECT * FROM component ORDER BY component_id;
+SELECT name, shelf_life_days
+FROM component
+WHERE storage_temp_max < 10
+ORDER BY shelf_life_days DESC;
+
+
+SELECT component_id, name, shelf_life_days FROM component ORDER BY component_id;
+
+
+SELECT name, storage_temp_min, storage_temp_max
+FROM component
+WHERE storage_temp_max < 10
+ORDER BY shelf_life_days DESC;
+
+
+INSERT INTO component (component_id, name, shelf_life_days, storage_temp_min, storage_temp_max)
+VALUES (99, 'Test', 500, 4.0, 6.0);
+
+
+
+ROLLBACK;
+
+SELECT COUNT(*) AS component_count FROM component;
+
+ROLLBACK;
+
+CREATE TABLE staff (
+    staff_id      NUMBER(5)        PRIMARY KEY,
+    full_name     VARCHAR2(100)    NOT NULL,
+    role          VARCHAR2(20)     NOT NULL,
+    contact       VARCHAR2(20),
+    login_id      VARCHAR2(30)     NOT NULL UNIQUE,
+    hired_on      DATE             DEFAULT SYSDATE NOT NULL,
+    is_active     CHAR(1)          DEFAULT 'Y' NOT NULL,
+    CONSTRAINT chk_staff_role     CHECK (role IN ('ADMIN','RECEPTION','LAB','ISSUE','AUDITOR')),
+    CONSTRAINT chk_staff_active   CHECK (is_active IN ('Y','N'))
+);
+
+CREATE SEQUENCE staff_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+INSERT INTO staff (staff_id, full_name, role, contact, login_id)
+VALUES (staff_seq.NEXTVAL, 'Anita Sharma', 'ADMIN', '+91-9876500001', 'asharma');
+
+INSERT INTO staff (staff_id, full_name, role, contact, login_id)
+VALUES (staff_seq.NEXTVAL, 'Rahul Mehta', 'RECEPTION', '+91-9876500002', 'rmehta');
+
+INSERT INTO staff (staff_id, full_name, role, contact, login_id)
+VALUES (staff_seq.NEXTVAL, 'Priya Iyer', 'LAB', '+91-9876500003', 'piyer');
+
+INSERT INTO staff (staff_id, full_name, role, contact, login_id)
+VALUES (staff_seq.NEXTVAL, 'Vikram Singh', 'ISSUE', '+91-9876500004', 'vsingh');
+
+INSERT INTO staff (staff_id, full_name, role, contact, login_id)
+VALUES (staff_seq.NEXTVAL, 'Meera Nair', 'AUDITOR', '+91-9876500005', 'mnair');
+
+COMMIT;
+
+
+SELECT staff_id, full_name, role, login_id, TO_CHAR(hired_on, 'YYYY-MM-DD HH24:MI') AS hired_on
+FROM staff
+ORDER BY staff_id;
+
+SELECT staff_id, full_name, role, is_active FROM staff ORDER BY staff_id;
+
+
+UPDATE staff SET is_active = 'N' WHERE login_id = 'vsingh';
+COMMIT;
+
+
+SELECT staff_id, full_name, role, is_active FROM staff WHERE is_active = 'Y' ORDER BY staff_id;
+
+
+UPDATE staff SET is_active = 'Y' WHERE login_id = 'vsingh';
+COMMIT;
+
+CREATE TABLE donor (
+    donor_id              NUMBER(7)        PRIMARY KEY,
+    full_name             VARCHAR2(100)    NOT NULL,
+    dob                   DATE             NOT NULL,
+    gender                CHAR(1)          NOT NULL,
+    blood_group           VARCHAR2(3)      NOT NULL,
+    contact               VARCHAR2(20)     NOT NULL,
+    email                 VARCHAR2(100),
+    address               VARCHAR2(300),
+    last_donation_date    DATE,
+    registered_on         DATE             DEFAULT SYSDATE NOT NULL,
+    is_active             CHAR(1)          DEFAULT 'Y' NOT NULL,
+    CONSTRAINT chk_donor_gender       CHECK (gender IN ('M','F','O')),
+    CONSTRAINT chk_donor_blood_group  CHECK (blood_group IN ('O+','O-','A+','A-','B+','B-','AB+','AB-')),
+    CONSTRAINT chk_donor_active       CHECK (is_active IN ('Y','N'))
+   
+);
+
+CREATE SEQUENCE donor_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email)
+VALUES (donor_seq.NEXTVAL, 'Arjun Kapoor',     DATE '1990-03-15', 'M', 'O+',  '+91-9876510001', 'arjun.k@email.com');
+
+INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email)
+VALUES (donor_seq.NEXTVAL, 'Sneha Patel',      DATE '1995-07-22', 'F', 'A+',  '+91-9876510002', 'sneha.p@email.com');
+
+INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email)
+VALUES (donor_seq.NEXTVAL, 'Rohan Desai',      DATE '1988-11-30', 'M', 'B+',  '+91-9876510003', 'rohan.d@email.com');
+
+INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email)
+VALUES (donor_seq.NEXTVAL, 'Kavya Reddy',      DATE '1992-05-10', 'F', 'AB+', '+91-9876510004', 'kavya.r@email.com');
+
+INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email)
+VALUES (donor_seq.NEXTVAL, 'Aditya Joshi',     DATE '1985-02-18', 'M', 'O-',  '+91-9876510005', 'aditya.j@email.com');
+
+INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email)
+VALUES (donor_seq.NEXTVAL, 'Pooja Verma',      DATE '1998-09-05', 'F', 'A-',  '+91-9876510006', 'pooja.v@email.com');
+
+INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email)
+VALUES (donor_seq.NEXTVAL, 'Karan Malhotra',   DATE '1991-12-01', 'M', 'B-',  '+91-9876510007', 'karan.m@email.com');
+
+INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email)
+VALUES (donor_seq.NEXTVAL, 'Riya Bhatt',       DATE '1996-04-25', 'F', 'AB-', '+91-9876510008', 'riya.b@email.com');
+
+INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email)
+VALUES (donor_seq.NEXTVAL, 'Sameer Shah',      DATE '1987-08-14', 'M', 'O+',  '+91-9876510009', 'sameer.s@email.com');
+
+INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email)
+VALUES (donor_seq.NEXTVAL, 'Tanvi Khanna',     DATE '1993-06-20', 'F', 'A+',  '+91-9876510010', 'tanvi.k@email.com');
+
+COMMIT;
+
+SELECT donor_id, full_name, blood_group,
+       FLOOR(MONTHS_BETWEEN(SYSDATE, dob) / 12) AS age
+FROM donor
+ORDER BY donor_id;
+
+SELECT blood_group, COUNT(*) AS donor_count
+FROM donor
+GROUP BY blood_group
+ORDER BY blood_group;
+
+SELECT donor_id, full_name, blood_group,
+       FLOOR(MONTHS_BETWEEN(SYSDATE, dob) / 12) AS age
+FROM donor
+ORDER BY donor_id;
+
+
+CREATE TABLE hospital (
+    hospital_id     NUMBER(5)        PRIMARY KEY,
+    name            VARCHAR2(150)    NOT NULL,
+    address         VARCHAR2(300)    NOT NULL,
+    city            VARCHAR2(50)     NOT NULL,
+    contact         VARCHAR2(20)     NOT NULL,
+    license_no      VARCHAR2(30)     NOT NULL UNIQUE,
+    is_active       CHAR(1)          DEFAULT 'Y' NOT NULL,
+    registered_on   DATE             DEFAULT SYSDATE NOT NULL,
+    CONSTRAINT chk_hospital_active CHECK (is_active IN ('Y','N'))
+);
+
+CREATE SEQUENCE hospital_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+
+INSERT INTO hospital (hospital_id, name, address, city, contact, license_no)
+VALUES (hospital_seq.NEXTVAL, 'Apollo Hospitals',         '21 Greams Lane',         'Chennai',   '+91-4428290200', 'TN-DL-2018-04421');
+
+INSERT INTO hospital (hospital_id, name, address, city, contact, license_no)
+VALUES (hospital_seq.NEXTVAL, 'Fortis Memorial',          'Sector 44, Gurgaon',     'Gurugram',  '+91-1244921021', 'HR-DL-2019-08832');
+
+INSERT INTO hospital (hospital_id, name, address, city, contact, license_no)
+VALUES (hospital_seq.NEXTVAL, 'AIIMS New Delhi',          'Ansari Nagar',           'New Delhi', '+91-1126588500', 'DL-DL-2017-01102');
+
+INSERT INTO hospital (hospital_id, name, address, city, contact, license_no)
+VALUES (hospital_seq.NEXTVAL, 'PGIMER Chandigarh',        'Sector 12',              'Chandigarh','+91-1722755555', 'CH-DL-2016-00071');
+
+INSERT INTO hospital (hospital_id, name, address, city, contact, license_no)
+VALUES (hospital_seq.NEXTVAL, 'Manipal Hospital',         'HAL Airport Road',       'Bengaluru', '+91-8025023300', 'KA-DL-2020-12091');
+
+COMMIT;
+
+SELECT hospital_id, name, city FROM hospital ORDER BY hospital_id;
+
+INSERT INTO hospital (hospital_id, name, address, city, contact, license_no)
+VALUES (hospital_seq.NEXTVAL, 'Some Other Hospital', 'Address', 'City', '+91-0000000000', 'TN-DL-2018-04421');
+
+ROLLBACK;
+
+CREATE TABLE donation (
+    donation_id        NUMBER(8)        PRIMARY KEY,
+    donor_id           NUMBER(7)        NOT NULL,
+    staff_id           NUMBER(5)        NOT NULL,
+    donation_date      DATE             DEFAULT SYSDATE NOT NULL,
+    volume_ml          NUMBER(4)        NOT NULL,
+    notes              VARCHAR2(300),
+    CONSTRAINT fk_donation_donor  FOREIGN KEY (donor_id) REFERENCES donor(donor_id),
+    CONSTRAINT fk_donation_staff  FOREIGN KEY (staff_id) REFERENCES staff(staff_id),
+    CONSTRAINT chk_donation_volume CHECK (volume_ml BETWEEN 200 AND 500)
+   
+);
+
+CREATE SEQUENCE donation_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+-- Donations from a year ago (all donors are eligible to donate again)
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 1, 2, DATE '2025-04-15', 350);
+
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 2, 2, DATE '2025-05-10', 350);
+
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 3, 2, DATE '2025-06-22', 450);
+
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 4, 2, DATE '2025-08-05', 350);
+
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 5, 2, DATE '2025-09-12', 450);
+
+-- Donations from 6 months ago
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 1, 2, DATE '2025-10-20', 350);
+
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 6, 2, DATE '2025-11-08', 350);
+
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 7, 2, DATE '2025-12-15', 450);
+
+-- Recent donations (within 90 days of today — donors NOT eligible to redonate)
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 8, 2, DATE '2026-02-18', 350);
+
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 9, 2, DATE '2026-03-05', 350);
+
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 10, 2, DATE '2026-03-25', 450);
+
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 2, 2, DATE '2026-04-01', 350);
+
+COMMIT;
+
+UPDATE donor d
+SET last_donation_date = (
+    SELECT MAX(donation_date)
+    FROM donation
+    WHERE donor_id = d.donor_id
+);
+
+COMMIT;
+
+SELECT donor_id, full_name, blood_group,
+       TO_CHAR(last_donation_date, 'YYYY-MM-DD') AS last_donation
+FROM donor
+ORDER BY donor_id;
+
+SELECT donor_id,
+       full_name,
+       TO_CHAR(last_donation_date, 'YYYY-MM-DD') AS last_donation,
+       SYSDATE - last_donation_date AS days_since_last,
+       CASE
+           WHEN last_donation_date IS NULL THEN 'ELIGIBLE (first-time)'
+           WHEN SYSDATE - last_donation_date >= 90 THEN 'ELIGIBLE'
+           ELSE 'NOT YET ELIGIBLE'
+       END AS eligibility_status
+FROM donor
+ORDER BY last_donation_date;
+
+SELECT donor_id,
+       full_name,
+       TO_CHAR(last_donation_date, 'YYYY-MM-DD') AS last_donation,
+       TRUNC(SYSDATE) - TRUNC(last_donation_date) AS days_since_last,
+       CASE
+           WHEN last_donation_date IS NULL THEN 'ELIGIBLE (first-time)'
+           WHEN TRUNC(SYSDATE) - TRUNC(last_donation_date) >= 90 THEN 'ELIGIBLE'
+           ELSE 'NOT YET ELIGIBLE'
+       END AS eligibility_status
+FROM donor
+ORDER BY last_donation_date;
+
+
+CREATE TABLE blood_unit (
+    unit_id           NUMBER(9)        PRIMARY KEY,
+    donation_id       NUMBER(8)        NOT NULL,
+    component_id      NUMBER(3)        NOT NULL,
+    collection_date   DATE             DEFAULT SYSDATE NOT NULL,
+    expiry_date       DATE             NOT NULL,
+    status            VARCHAR2(15)     DEFAULT 'QUARANTINE' NOT NULL,
+    storage_location  VARCHAR2(50),
+    CONSTRAINT fk_unit_donation   FOREIGN KEY (donation_id)  REFERENCES donation(donation_id),
+    CONSTRAINT fk_unit_component  FOREIGN KEY (component_id) REFERENCES component(component_id),
+    CONSTRAINT chk_unit_status    CHECK (status IN ('QUARANTINE','AVAILABLE','RESERVED','ISSUED','EXPIRED','DISCARDED')),
+    CONSTRAINT chk_unit_expiry    CHECK (expiry_date > collection_date)
+);
+
+CREATE SEQUENCE unit_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+ALTER TABLE blood_unit
+MODIFY storage_location VARCHAR2(50);
+COMMIT;
+
+
+-- Generate one PRBC unit per donation, with expiry = collection_date + 42 days (PRBC shelf life)
+INSERT INTO blood_unit (unit_id, donation_id, component_id, collection_date, expiry_date, status, storage_location)
+SELECT unit_seq.NEXTVAL,
+       d.donation_id,
+       2 AS component_id,                        -- PRBC
+       d.donation_date,
+       d.donation_date + 42,                     -- 42-day shelf life
+       CASE
+           WHEN d.donation_date + 42 < SYSDATE THEN 'EXPIRED'
+           ELSE 'AVAILABLE'
+       END AS status,
+       'Fridge-A-Shelf-' || (MOD(d.donation_id, 4) + 1)
+FROM donation d;
+
+
+COMMIT;
+
+SELECT unit_id,
+       donation_id,
+       TO_CHAR(collection_date, 'YYYY-MM-DD') AS collected,
+       TO_CHAR(expiry_date, 'YYYY-MM-DD')     AS expires,
+       status,
+       storage_location
+FROM blood_unit
+ORDER BY unit_id;
+
+
+SELECT status, COUNT(*) AS unit_count
+FROM blood_unit
+GROUP BY status;
+
+SELECT bu.unit_id,
+       d.full_name           AS donor_name,
+       d.blood_group,
+       TO_CHAR(don.donation_date, 'YYYY-MM-DD') AS donated,
+       TO_CHAR(bu.expiry_date, 'YYYY-MM-DD')    AS expires,
+       bu.status
+FROM blood_unit bu
+JOIN donation don ON don.donation_id = bu.donation_id
+JOIN donor    d   ON d.donor_id      = don.donor_id
+WHERE bu.status = 'AVAILABLE'
+ORDER BY bu.expiry_date;
+
+
+CREATE TABLE screening (
+    screening_id     NUMBER(9)        PRIMARY KEY,
+    unit_id          NUMBER(9)        NOT NULL UNIQUE,   -- UNIQUE enforces the 1-to-1
+    hiv              VARCHAR2(10)     NOT NULL,
+    hbv              VARCHAR2(10)     NOT NULL,
+    hcv              VARCHAR2(10)     NOT NULL,
+    syphilis         VARCHAR2(10)     NOT NULL,
+    malaria          VARCHAR2(10)     NOT NULL,
+    tested_on        DATE             DEFAULT SYSDATE NOT NULL,
+    tested_by        NUMBER(5)        NOT NULL,          -- FK to staff
+    CONSTRAINT fk_screening_unit  FOREIGN KEY (unit_id)   REFERENCES blood_unit(unit_id),
+    CONSTRAINT fk_screening_staff FOREIGN KEY (tested_by) REFERENCES staff(staff_id),
+    CONSTRAINT chk_screen_hiv      CHECK (hiv      IN ('NEGATIVE','POSITIVE','PENDING')),
+    CONSTRAINT chk_screen_hbv      CHECK (hbv      IN ('NEGATIVE','POSITIVE','PENDING')),
+    CONSTRAINT chk_screen_hcv      CHECK (hcv      IN ('NEGATIVE','POSITIVE','PENDING')),
+    CONSTRAINT chk_screen_syphilis CHECK (syphilis IN ('NEGATIVE','POSITIVE','PENDING')),
+    CONSTRAINT chk_screen_malaria  CHECK (malaria  IN ('NEGATIVE','POSITIVE','PENDING'))
+);
+CREATE SEQUENCE screening_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+CREATE TABLE recipient (
+    recipient_id     NUMBER(7)        PRIMARY KEY,
+    full_name        VARCHAR2(100)    NOT NULL,
+    dob              DATE             NOT NULL,
+    gender           CHAR(1)          NOT NULL,
+    blood_group      VARCHAR2(3)      NOT NULL,
+    hospital_id      NUMBER(5)        NOT NULL,
+    contact          VARCHAR2(20),
+    registered_on    DATE             DEFAULT SYSDATE NOT NULL,
+    CONSTRAINT fk_recipient_hospital  FOREIGN KEY (hospital_id) REFERENCES hospital(hospital_id),
+    CONSTRAINT chk_recipient_gender   CHECK (gender IN ('M','F','O')),
+    CONSTRAINT chk_recipient_bg       CHECK (blood_group IN ('O+','O-','A+','A-','B+','B-','AB+','AB-'))
+   
+);
+CREATE SEQUENCE recipient_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+
+CREATE TABLE request (
+    request_id       NUMBER(8)        PRIMARY KEY,
+    recipient_id     NUMBER(7)        NOT NULL,
+    component_id     NUMBER(3)        NOT NULL,
+    units_needed     NUMBER(3)        NOT NULL,
+    urgency          VARCHAR2(10)     DEFAULT 'ROUTINE' NOT NULL,
+    request_date     DATE             DEFAULT SYSDATE NOT NULL,
+    status           VARCHAR2(15)     DEFAULT 'OPEN' NOT NULL,
+    CONSTRAINT fk_request_recipient  FOREIGN KEY (recipient_id) REFERENCES recipient(recipient_id),
+    CONSTRAINT fk_request_component  FOREIGN KEY (component_id) REFERENCES component(component_id),
+    CONSTRAINT chk_request_units    CHECK (units_needed BETWEEN 1 AND 20),
+    CONSTRAINT chk_request_urgency  CHECK (urgency IN ('ROUTINE','URGENT','EMERGENCY')),
+    CONSTRAINT chk_request_status   CHECK (status IN ('OPEN','PARTIAL','FULFILLED','CANCELLED'))
+);
+CREATE SEQUENCE request_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+
+CREATE TABLE issuance (
+    issuance_id      NUMBER(9)        PRIMARY KEY,
+    request_id       NUMBER(8)        NOT NULL,
+    unit_id          NUMBER(9)        NOT NULL UNIQUE,   -- a unit can only ever appear once here
+    issued_on        DATE             DEFAULT SYSDATE NOT NULL,
+    issued_by        NUMBER(5)        NOT NULL,
+    notes            VARCHAR2(200),
+    CONSTRAINT fk_issuance_request FOREIGN KEY (request_id) REFERENCES request(request_id),
+    CONSTRAINT fk_issuance_unit    FOREIGN KEY (unit_id)    REFERENCES blood_unit(unit_id),
+    CONSTRAINT fk_issuance_staff   FOREIGN KEY (issued_by)  REFERENCES staff(staff_id)
+);
+CREATE SEQUENCE issuance_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+
+CREATE TABLE audit_log (
+    audit_id         NUMBER(10)       PRIMARY KEY,
+    table_name       VARCHAR2(30)     NOT NULL,
+    op_type          VARCHAR2(10)     NOT NULL,
+    record_pk        VARCHAR2(50),
+    old_value        VARCHAR2(500),
+    new_value        VARCHAR2(500),
+    changed_by       VARCHAR2(30)     DEFAULT USER NOT NULL,
+    changed_at       TIMESTAMP        DEFAULT SYSTIMESTAMP NOT NULL,
+    CONSTRAINT chk_audit_op CHECK (op_type IN ('INSERT','UPDATE','DELETE','ERROR'))
+);
+CREATE SEQUENCE audit_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+-- More recent donations to bulk up AVAILABLE inventory ----------------
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 3, 2, DATE '2026-04-05', 350);
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 5, 2, DATE '2026-04-08', 350);
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 7, 2, DATE '2026-04-10', 350);
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 1, 2, DATE '2026-04-12', 350);
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 4, 2, DATE '2026-04-14', 350);
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 6, 2, DATE '2026-04-16', 350);
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 8, 2, DATE '2026-04-18', 350);
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 9, 2, DATE '2026-04-20', 350);
+
+-- Refresh donor.last_donation_date so it reflects these new donations
+UPDATE donor d
+SET last_donation_date = (SELECT MAX(donation_date) FROM donation WHERE donor_id = d.donor_id);
+
+-- BloodUnits for ALL donations that don't have one yet
+INSERT INTO blood_unit (unit_id, donation_id, component_id, collection_date, expiry_date, status, storage_location)
+SELECT unit_seq.NEXTVAL,
+       d.donation_id,
+       2,                           -- PRBC
+       d.donation_date,
+       d.donation_date + 42,
+       CASE WHEN d.donation_date + 42 < SYSDATE THEN 'EXPIRED' ELSE 'AVAILABLE' END,
+       'Fridge-A-Shelf-' || (MOD(d.donation_id, 4) + 1)
+FROM donation d
+WHERE NOT EXISTS (SELECT 1 FROM blood_unit bu WHERE bu.donation_id = d.donation_id);
+
+-- Screening rows for every BloodUnit (all negative — these are clean donors)
+INSERT INTO screening (screening_id, unit_id, hiv, hbv, hcv, syphilis, malaria, tested_on, tested_by)
+SELECT screening_seq.NEXTVAL,
+       bu.unit_id,
+       'NEGATIVE','NEGATIVE','NEGATIVE','NEGATIVE','NEGATIVE',
+       bu.collection_date + 1,      -- screened next day
+       3                            -- staff Priya Iyer (LAB)
+FROM blood_unit bu
+WHERE NOT EXISTS (SELECT 1 FROM screening s WHERE s.unit_id = bu.unit_id);
+
+-- Recipients (one per hospital, varied blood groups)
+INSERT INTO recipient (recipient_id, full_name, dob, gender, blood_group, hospital_id, contact)
+VALUES (recipient_seq.NEXTVAL, 'Patient Ramesh',  DATE '1965-08-12', 'M', 'O+',  1, '+91-9876520001');
+INSERT INTO recipient (recipient_id, full_name, dob, gender, blood_group, hospital_id, contact)
+VALUES (recipient_seq.NEXTVAL, 'Patient Lakshmi', DATE '1972-03-22', 'F', 'A+',  1, '+91-9876520002');
+INSERT INTO recipient (recipient_id, full_name, dob, gender, blood_group, hospital_id, contact)
+VALUES (recipient_seq.NEXTVAL, 'Patient Suresh',  DATE '1955-11-04', 'M', 'B+',  2, '+91-9876520003');
+INSERT INTO recipient (recipient_id, full_name, dob, gender, blood_group, hospital_id, contact)
+VALUES (recipient_seq.NEXTVAL, 'Patient Geeta',   DATE '1980-06-30', 'F', 'AB+', 3, '+91-9876520004');
+INSERT INTO recipient (recipient_id, full_name, dob, gender, blood_group, hospital_id, contact)
+VALUES (recipient_seq.NEXTVAL, 'Patient Anil',    DATE '1962-09-18', 'M', 'O-',  4, '+91-9876520005');
+INSERT INTO recipient (recipient_id, full_name, dob, gender, blood_group, hospital_id, contact)
+VALUES (recipient_seq.NEXTVAL, 'Patient Maya',    DATE '1985-12-10', 'F', 'A-',  5, '+91-9876520006');
+
+-- Requests (mix of urgencies, mix of statuses)
+INSERT INTO request (request_id, recipient_id, component_id, units_needed, urgency, request_date, status)
+VALUES (request_seq.NEXTVAL, 1, 2, 2, 'ROUTINE',   DATE '2026-04-22', 'OPEN');
+INSERT INTO request (request_id, recipient_id, component_id, units_needed, urgency, request_date, status)
+VALUES (request_seq.NEXTVAL, 2, 2, 1, 'URGENT',    DATE '2026-04-23', 'OPEN');
+INSERT INTO request (request_id, recipient_id, component_id, units_needed, urgency, request_date, status)
+VALUES (request_seq.NEXTVAL, 3, 2, 1, 'EMERGENCY', DATE '2026-04-24', 'OPEN');
+INSERT INTO request (request_id, recipient_id, component_id, units_needed, urgency, request_date, status)
+VALUES (request_seq.NEXTVAL, 4, 2, 1, 'ROUTINE',   DATE '2026-04-24', 'OPEN');
+INSERT INTO request (request_id, recipient_id, component_id, units_needed, urgency, request_date, status)
+VALUES (request_seq.NEXTVAL, 5, 2, 1, 'URGENT',    DATE '2026-04-25', 'OPEN');
+
+COMMIT;
+
+
+SELECT
+    (SELECT COUNT(*) FROM component) AS components,
+    (SELECT COUNT(*) FROM staff)      AS staff,
+    (SELECT COUNT(*) FROM donor)      AS donors,
+    (SELECT COUNT(*) FROM hospital)   AS hospitals,
+    (SELECT COUNT(*) FROM donation)   AS donations,
+    (SELECT COUNT(*) FROM blood_unit) AS units,
+    (SELECT COUNT(*) FROM screening)  AS screenings,
+    (SELECT COUNT(*) FROM recipient)  AS recipients,
+    (SELECT COUNT(*) FROM request)    AS requests
+    
+FROM dual;
+
+
+SELECT status, COUNT(*) AS units FROM blood_unit GROUP BY status ORDER BY status;
+
+
+SET SERVEROUTPUT ON;
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Hello from PL/SQL!');
+    DBMS_OUTPUT.PUT_LINE('Today is: ' || TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'));
+END;
+/
+
+
+
+
+CREATE OR REPLACE FUNCTION donor_eligible(
+    p_donor_id IN NUMBER
+) RETURN VARCHAR2 IS
+    v_last_donation_date DATE;
+    v_days_since NUMBER;
+BEGIN
+    SELECT last_donation_date INTO v_last_donation_date
+    FROM donor
+    WHERE donor_id = p_donor_id;
+
+    IF v_last_donation_date IS NULL THEN
+        RETURN 'TRUE';
+    END IF;
+
+    v_days_since := TRUNC(SYSDATE) - TRUNC(v_last_donation_date);
+
+    IF v_days_since >= 90 THEN
+        RETURN 'TRUE';
+    ELSE
+        RETURN 'FALSE';
+    END IF;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: Donor ' || p_donor_id || ' not found');
+        RETURN NULL;
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: ' || SQLCODE || ' - ' || SQLERRM);
+        RETURN NULL;
+END donor_eligible;
+/
+
+
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Donor 1 eligible? ' || donor_eligible(1));
+    DBMS_OUTPUT.PUT_LINE('Donor 2 eligible? ' || donor_eligible(2));
+    DBMS_OUTPUT.PUT_LINE('Donor 999 eligible? ' || donor_eligible(999));
+END;
+/
+
+
+
+CREATE OR REPLACE FUNCTION calc_expiry_date(
+    p_component_id IN NUMBER,
+    p_collection_date IN DATE
+) RETURN DATE IS
+    v_shelf_life NUMBER;
+    v_expiry_date DATE;
+BEGIN
+    -- Look up the shelf life for this component
+    SELECT shelf_life_days INTO v_shelf_life
+    FROM component
+    WHERE component_id = p_component_id;
+    
+    -- Calculate expiry
+    v_expiry_date := p_collection_date + v_shelf_life;
+    
+    RETURN v_expiry_date;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: Component ' || p_component_id || ' not found');
+        RETURN NULL;
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: ' || SQLCODE || ' - ' || SQLERRM);
+        RETURN NULL;
+END calc_expiry_date;
+/
+
+
+
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('PRBC (component 2) expires in: ' || calc_expiry_date(2, DATE '2026-04-25'));
+    DBMS_OUTPUT.PUT_LINE('Platelets (component 3) expires in: ' || calc_expiry_date(3, DATE '2026-04-25'));
+    DBMS_OUTPUT.PUT_LINE('Invalid component 999: ' || calc_expiry_date(999, DATE '2026-04-25'));
+END;
+/
+
+
+
+
+CREATE TABLE blood_compatibility (
+    recipient_group VARCHAR2(3) NOT NULL,
+    donor_group     VARCHAR2(3) NOT NULL,
+    PRIMARY KEY (recipient_group, donor_group)
+);
+
+INSERT INTO blood_compatibility VALUES ('O+', 'O+');
+INSERT INTO blood_compatibility VALUES ('O+', 'O-');
+INSERT INTO blood_compatibility VALUES ('O+', 'A+');
+INSERT INTO blood_compatibility VALUES ('O+', 'A-');
+INSERT INTO blood_compatibility VALUES ('O+', 'B+');
+INSERT INTO blood_compatibility VALUES ('O+', 'B-');
+INSERT INTO blood_compatibility VALUES ('O+', 'AB+');
+INSERT INTO blood_compatibility VALUES ('O+', 'AB-');
+
+INSERT INTO blood_compatibility VALUES ('O-', 'O-');
+
+INSERT INTO blood_compatibility VALUES ('A+', 'A+');
+INSERT INTO blood_compatibility VALUES ('A+', 'A-');
+INSERT INTO blood_compatibility VALUES ('A+', 'O+');
+INSERT INTO blood_compatibility VALUES ('A+', 'O-');
+
+INSERT INTO blood_compatibility VALUES ('A-', 'A-');
+INSERT INTO blood_compatibility VALUES ('A-', 'O-');
+
+INSERT INTO blood_compatibility VALUES ('B+', 'B+');
+INSERT INTO blood_compatibility VALUES ('B+', 'B-');
+INSERT INTO blood_compatibility VALUES ('B+', 'O+');
+INSERT INTO blood_compatibility VALUES ('B+', 'O-');
+
+INSERT INTO blood_compatibility VALUES ('B-', 'B-');
+INSERT INTO blood_compatibility VALUES ('B-', 'O-');
+
+INSERT INTO blood_compatibility VALUES ('AB+', 'AB+');
+INSERT INTO blood_compatibility VALUES ('AB+', 'AB-');
+INSERT INTO blood_compatibility VALUES ('AB+', 'A+');
+INSERT INTO blood_compatibility VALUES ('AB+', 'A-');
+INSERT INTO blood_compatibility VALUES ('AB+', 'B+');
+INSERT INTO blood_compatibility VALUES ('AB+', 'B-');
+INSERT INTO blood_compatibility VALUES ('AB+', 'O+');
+INSERT INTO blood_compatibility VALUES ('AB+', 'O-');
+
+INSERT INTO blood_compatibility VALUES ('AB-', 'AB-');
+INSERT INTO blood_compatibility VALUES ('AB-', 'A-');
+INSERT INTO blood_compatibility VALUES ('AB-', 'B-');
+INSERT INTO blood_compatibility VALUES ('AB-', 'O-');
+
+COMMIT;
+
+CREATE OR REPLACE FUNCTION get_compatible_groups(
+    p_recipient_group IN VARCHAR2
+) RETURN VARCHAR2 IS
+    v_compatible_list VARCHAR2(500);
+BEGIN
+    SELECT LISTAGG(donor_group, ', ') WITHIN GROUP (ORDER BY donor_group)
+    INTO v_compatible_list
+    FROM blood_compatibility
+    WHERE recipient_group = p_recipient_group;
+    
+    RETURN v_compatible_list;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: No compatible groups for ' || p_recipient_group);
+        RETURN NULL;
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: ' || SQLCODE || ' - ' || SQLERRM);
+        RETURN NULL;
+END get_compatible_groups;
+/
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== TESTING THREE FUNCTIONS ===');
+    DBMS_OUTPUT.PUT_LINE('');
+    
+    DBMS_OUTPUT.PUT_LINE('1. calc_expiry_date');
+    DBMS_OUTPUT.PUT_LINE('   PRBC collected today expires: ' || calc_expiry_date(2, SYSDATE));
+    DBMS_OUTPUT.PUT_LINE('');
+    
+    DBMS_OUTPUT.PUT_LINE('2. donor_eligible');
+    DBMS_OUTPUT.PUT_LINE('   Donor 1 eligible: ' || donor_eligible(1));
+    DBMS_OUTPUT.PUT_LINE('   Donor 2 eligible: ' || donor_eligible(2));
+    DBMS_OUTPUT.PUT_LINE('');
+    
+    DBMS_OUTPUT.PUT_LINE('3. get_compatible_groups');
+    DBMS_OUTPUT.PUT_LINE('   O+ can receive from: ' || get_compatible_groups('O+'));
+    DBMS_OUTPUT.PUT_LINE('   AB+ can receive from: ' || get_compatible_groups('AB+'));
+    DBMS_OUTPUT.PUT_LINE('   O- can receive from: ' || get_compatible_groups('O-'));
+    
+END;
+/
+
+-- 10 queries--
+SELECT 
+    d.donor_id,
+    d.full_name,
+    d.blood_group,
+    COUNT(don.donation_id) AS total_donations,
+    TO_CHAR(MAX(don.donation_date), 'YYYY-MM-DD') AS last_donation,
+    CASE 
+        WHEN donor_eligible(d.donor_id) = TRUE THEN 'ELIGIBLE'
+        WHEN donor_eligible(d.donor_id) = FALSE THEN 'NOT YET ELIGIBLE'
+        ELSE 'UNKNOWN'
+    END AS status
+FROM donor d
+LEFT JOIN donation don ON d.donor_id = don.donor_id
+GROUP BY d.donor_id, d.full_name, d.blood_group
+ORDER BY d.donor_id;
+
+
+SELECT 
+    d.blood_group,
+    c.name AS component,
+    COUNT(bu.unit_id) AS available_units,
+    MIN(bu.expiry_date) AS expires_soonest
+FROM blood_unit bu
+JOIN component c ON bu.component_id = c.component_id
+JOIN donation don ON bu.donation_id = don.donation_id
+JOIN donor d ON don.donor_id = d.donor_id
+WHERE bu.status = 'AVAILABLE'
+GROUP BY d.blood_group, c.name
+ORDER BY d.blood_group, c.name;
+
+
+SELECT 
+    bu.unit_id,
+    d.full_name AS donor,
+    d.blood_group,
+    c.name AS component,
+    bu.status,
+    TO_CHAR(bu.expiry_date, 'YYYY-MM-DD') AS expires,
+    TRUNC(bu.expiry_date - SYSDATE) AS days_remaining
+FROM blood_unit bu
+JOIN donation don ON bu.donation_id = don.donation_id
+JOIN donor d ON don.donor_id = d.donor_id
+JOIN component c ON bu.component_id = c.component_id
+WHERE bu.expiry_date BETWEEN SYSDATE AND SYSDATE + 7
+  AND bu.status IN ('AVAILABLE', 'RESERVED')
+ORDER BY bu.expiry_date;
+
+
+SELECT 
+    r.request_id,
+    rec.full_name AS recipient,
+    rec.blood_group,
+    h.name AS hospital,
+    c.name AS component_needed,
+    r.units_needed,
+    r.urgency,
+    COUNT(bu.unit_id) AS compatible_available
+FROM request r
+JOIN recipient rec ON r.recipient_id = rec.recipient_id
+JOIN hospital h ON rec.hospital_id = h.hospital_id
+JOIN component c ON r.component_id = c.component_id
+LEFT JOIN blood_unit bu ON bu.component_id = r.component_id
+    AND bu.status = 'AVAILABLE'
+    AND bu.donation_id IN (
+        SELECT don.donation_id 
+        FROM donation don
+        JOIN donor d ON don.donor_id = d.donor_id
+        WHERE d.blood_group IN (
+            SELECT donor_group 
+            FROM blood_compatibility 
+            WHERE recipient_group = rec.blood_group
+        )
+    )
+WHERE r.status = 'OPEN'
+GROUP BY 
+    r.request_id, rec.full_name, rec.blood_group, h.name, c.name, r.units_needed, r.urgency
+ORDER BY r.urgency DESC, MAX(r.request_date) DESC;
+
+
+
+SELECT 
+    CASE 
+        WHEN contact LIKE '+91-987%' THEN 'North'
+        WHEN contact LIKE '+91-988%' THEN 'South'
+        ELSE 'Other'
+    END AS region,
+    COUNT(*) AS donor_count,
+    ROUND(AVG(MONTHS_BETWEEN(SYSDATE, dob) / 12), 1) AS avg_age
+FROM donor
+GROUP BY CASE 
+    WHEN contact LIKE '+91-987%' THEN 'North'
+    WHEN contact LIKE '+91-988%' THEN 'South'
+    ELSE 'Other'
+END
+ORDER BY donor_count DESC;
+
+
+SELECT 
+    s.staff_id,
+    s.full_name,
+    s.role,
+    COUNT(DISTINCT d.donation_id) AS donations_recorded,
+    COUNT(DISTINCT i.issuance_id) AS units_issued,
+    MAX(d.donation_date) AS last_donation_date,
+    MAX(i.issued_on) AS last_issuance_date
+FROM staff s
+LEFT JOIN donation d ON s.staff_id = d.staff_id
+LEFT JOIN issuance i ON s.staff_id = i.issued_by
+WHERE s.is_active = 'Y'
+GROUP BY s.staff_id, s.full_name, s.role
+ORDER BY s.staff_id;
+
+SELECT 
+    h.hospital_id,
+    h.name AS hospital,
+    COUNT(r.request_id) AS total_requests,
+    COUNT(CASE WHEN r.status = 'OPEN' THEN 1 END) AS open_requests,
+    COUNT(CASE WHEN r.status = 'FULFILLED' THEN 1 END) AS fulfilled_requests,
+    SUM(r.units_needed) AS units_requested,
+    ROUND(
+        100 * COUNT(CASE WHEN r.status = 'FULFILLED' THEN 1 END) 
+        / NULLIF(COUNT(r.request_id), 0),
+        1
+    ) AS fulfillment_rate
+FROM hospital h
+LEFT JOIN recipient rec ON h.hospital_id = rec.hospital_id
+LEFT JOIN request r ON rec.recipient_id = r.recipient_id
+GROUP BY h.hospital_id, h.name
+ORDER BY total_requests DESC;
+
+
+
+SELECT 
+    d.donor_id,
+    d.full_name,
+    d.blood_group,
+    TO_CHAR(d.last_donation_date, 'YYYY-MM-DD') AS last_donated,
+    (SELECT MAX(bu.unit_id) 
+     FROM blood_unit bu 
+     WHERE bu.donation_id = (SELECT donation_id FROM donation WHERE donor_id = d.donor_id ORDER BY donation_date DESC FETCH FIRST 1 ROW ONLY)
+    ) AS latest_unit_id,
+    (SELECT bu.status
+     FROM blood_unit bu
+     WHERE bu.donation_id = (SELECT donation_id FROM donation WHERE donor_id = d.donor_id ORDER BY donation_date DESC FETCH FIRST 1 ROW ONLY)
+    ) AS latest_unit_status
+FROM donor d
+WHERE d.is_active = 'Y'
+ORDER BY d.last_donation_date DESC NULLS LAST;
+
+
+
+SELECT 
+    c.component_id,
+    c.name,
+    c.shelf_life_days,
+    COUNT(bu.unit_id) AS total_units,
+    COUNT(CASE WHEN bu.status = 'AVAILABLE' THEN 1 END) AS available_units,
+    ROUND(AVG(bu.expiry_date - bu.collection_date), 1) AS avg_stored_days,
+    ROUND(100 * AVG(bu.expiry_date - bu.collection_date) / c.shelf_life_days, 1) AS avg_percent_shelf_used
+FROM component c
+LEFT JOIN blood_unit bu ON c.component_id = bu.component_id
+GROUP BY c.component_id, c.name, c.shelf_life_days
+ORDER BY c.component_id;
+
+
+
+SELECT 
+    bc.recipient_group,
+    COUNT(DISTINCT d.donor_id) AS matching_donor_count,
+    LISTAGG(DISTINCT d.blood_group, ', ') 
+        WITHIN GROUP (ORDER BY d.blood_group) AS donor_groups_present,
+    COUNT(DISTINCT bu.unit_id) AS available_from_compatible
+FROM blood_compatibility bc
+LEFT JOIN donor d 
+    ON d.blood_group = bc.donor_group 
+    AND d.is_active = 'Y'
+LEFT JOIN blood_unit bu 
+    ON bu.donation_id IN (
+        SELECT don.donation_id 
+        FROM donation don 
+        WHERE don.donor_id = d.donor_id
+    )
+    AND bu.status = 'AVAILABLE'
+GROUP BY bc.recipient_group
+ORDER BY bc.recipient_group;
+
+
+
+SELECT 
+    bc.recipient_group,
+    COUNT(DISTINCT d.donor_id) AS matching_donor_count,
+    LISTAGG(d.blood_group, ', ') 
+        WITHIN GROUP (ORDER BY d.blood_group) AS donor_groups_present,
+    COUNT(DISTINCT bu.unit_id) AS available_from_compatible
+FROM blood_compatibility bc
+LEFT JOIN donor d 
+    ON d.blood_group = bc.donor_group 
+    AND d.is_active = 'Y'
+LEFT JOIN blood_unit bu 
+    ON bu.donation_id IN (
+        SELECT don.donation_id 
+        FROM donation don 
+        WHERE don.donor_id = d.donor_id
+    )
+    AND bu.status = 'AVAILABLE'
+GROUP BY bc.recipient_group
+ORDER BY bc.recipient_group;
+
+
+
+
+--procedures
+
+CREATE OR REPLACE PROCEDURE register_donor(
+    p_full_name IN VARCHAR2,
+    p_dob IN DATE,
+    p_gender IN CHAR,
+    p_blood_group IN VARCHAR2,
+    p_contact IN VARCHAR2,
+    p_email IN VARCHAR2 DEFAULT NULL,
+    p_address IN VARCHAR2 DEFAULT NULL,
+    p_donor_id OUT NUMBER
+) IS
+    v_age_months NUMBER;
+BEGIN
+    -- Validate age
+    v_age_months := MONTHS_BETWEEN(SYSDATE, p_dob);
+    
+    IF v_age_months < 18 * 12 OR v_age_months > 65 * 12 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Donor age must be between 18 and 65 years');
+    END IF;
+    
+    -- Validate blood group
+    IF p_blood_group NOT IN ('O+','O-','A+','A-','B+','B-','AB+','AB-') THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Invalid blood group: ' || p_blood_group);
+    END IF;
+    
+    -- Validate gender
+    IF p_gender NOT IN ('M','F','O') THEN
+        RAISE_APPLICATION_ERROR(-20003, 'Invalid gender: ' || p_gender);
+    END IF;
+    
+    -- Insert the new donor
+    INSERT INTO donor (donor_id, full_name, dob, gender, blood_group, contact, email, address)
+    VALUES (donor_seq.NEXTVAL, p_full_name, p_dob, p_gender, p_blood_group, p_contact, p_email, p_address);
+    
+    -- Return the newly assigned ID
+    SELECT MAX(donor_id) INTO p_donor_id FROM donor;
+    
+    COMMIT;
+    
+    DBMS_OUTPUT.PUT_LINE('Donor registered successfully. ID: ' || p_donor_id);
+
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        DBMS_OUTPUT.PUT_LINE('ERROR: ' || SQLCODE || ' - ' || SQLERRM);
+        RAISE;
+END register_donor;
+/
+
+
+DECLARE
+    v_new_donor_id NUMBER;
+BEGIN
+    -- Test 1: Valid registration
+    register_donor(
+        p_full_name => 'Rajesh Kumar',
+        p_dob => DATE '1985-03-15',
+        p_gender => 'M',
+        p_blood_group => 'O+',
+        p_contact => '+91-9876530001',
+        p_email => 'rajesh.k@email.com',
+        p_address => '123 Main St, Mumbai',
+        p_donor_id => v_new_donor_id
+    );
+    DBMS_OUTPUT.PUT_LINE('New donor ID: ' || v_new_donor_id);
+    
+END;
+/
+
+BEGIN
+    -- Test 2: Too young (should fail)
+    DECLARE
+        v_id NUMBER;
+    BEGIN
+        register_donor('Too Young', DATE '2015-01-01', 'M', 'O+', '+91-0000000000', NULL, NULL, v_id);
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Expected error caught: ' || SQLERRM);
+    END;
+    
+    -- Test 3: Invalid blood group (should fail)
+    DECLARE
+        v_id NUMBER;
+    BEGIN
+        register_donor('Invalid Group', DATE '1990-01-01', 'M', 'XX', '+91-0000000000', NULL, NULL, v_id);
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Expected error caught: ' || SQLERRM);
+    END;
+
+END;
+/
+
+
+
+
+CREATE OR REPLACE PROCEDURE issue_unit(
+    p_request_id IN NUMBER,
+    p_unit_id IN NUMBER,
+    p_staff_id IN NUMBER
+) IS
+    v_unit_status VARCHAR2(15);
+    v_recipient_blood_group VARCHAR2(3);
+    v_donor_blood_group VARCHAR2(3);
+    v_request_status VARCHAR2(15);
+    v_compatible_list VARCHAR2(500);
+BEGIN
+
+    BEGIN
+        SELECT status INTO v_unit_status
+        FROM blood_unit
+        WHERE unit_id = p_unit_id
+        FOR UPDATE NOWAIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20010, 'Unit is locked or unavailable for issuance (possibly being issued by another session)');
+    END;
+    
+    
+    IF v_unit_status != 'AVAILABLE' THEN
+        RAISE_APPLICATION_ERROR(-20011, 'Unit status is ' || v_unit_status || '; only AVAILABLE units can be issued');
+    END IF;
+    
+   
+    SELECT r.recipient_id
+    INTO v_recipient_blood_group
+    FROM request r
+    WHERE r.request_id = p_request_id;
+   
+    SELECT rec.blood_group
+    INTO v_recipient_blood_group
+    FROM recipient rec
+    WHERE rec.recipient_id = (
+        SELECT recipient_id FROM request WHERE request_id = p_request_id
+    );
+    
+   
+    SELECT d.blood_group
+    INTO v_donor_blood_group
+    FROM donor d
+    WHERE d.donor_id = (
+        SELECT don.donor_id
+        FROM donation don
+        WHERE don.donation_id = (
+            SELECT bu.donation_id
+            FROM blood_unit bu
+            WHERE bu.unit_id = p_unit_id
+        )
+    );
+
+    v_compatible_list := get_compatible_groups(v_recipient_blood_group);
+    
+    IF INSTR(v_compatible_list, v_donor_blood_group) = 0 THEN
+        RAISE_APPLICATION_ERROR(-20012, 
+            'Blood group mismatch: recipient ' || v_recipient_blood_group || 
+            ' cannot receive from donor ' || v_donor_blood_group);
+    END IF;
+    
+   
+    INSERT INTO issuance (issuance_id, request_id, unit_id, issued_on, issued_by)
+    VALUES (issuance_seq.NEXTVAL, p_request_id, p_unit_id, SYSDATE, p_staff_id);
+    
+  
+    UPDATE blood_unit
+    SET status = 'ISSUED'
+    WHERE unit_id = p_unit_id;
+ 
+    INSERT INTO audit_log (audit_id, table_name, op_type, record_pk, old_value, new_value, changed_by)
+    VALUES (audit_seq.NEXTVAL, 'blood_unit', 'UPDATE', p_unit_id, 'AVAILABLE', 'ISSUED', USER);
+    
+  
+    COMMIT;
+    
+    DBMS_OUTPUT.PUT_LINE('Unit ' || p_unit_id || ' issued successfully to request ' || p_request_id);
+
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        DBMS_OUTPUT.PUT_LINE('ISSUANCE FAILED: ' || SQLCODE || ' - ' || SQLERRM);
+        RAISE;
+END issue_unit;
+/
+
+SELECT r.request_id, r.recipient_id, rec.blood_group, rec.full_name
+FROM request r
+JOIN recipient rec ON r.recipient_id = rec.recipient_id
+WHERE r.status = 'OPEN'
+ORDER BY r.request_id;
+
+
+SELECT bu.unit_id, d.blood_group, d.full_name, bu.expiry_date
+FROM blood_unit bu
+JOIN donation don ON bu.donation_id = don.donation_id
+JOIN donor d ON don.donor_id = d.donor_id
+WHERE bu.status = 'AVAILABLE'
+  AND d.blood_group IN (SELECT donor_group FROM blood_compatibility WHERE recipient_group = 'O+')
+ORDER BY bu.unit_id
+FETCH FIRST 1 ROW ONLY;
+
+UPDATE blood_unit
+SET status = 'AVAILABLE'
+WHERE unit_id = 13;
+
+
+BEGIN
+    issue_unit(
+        p_request_id => 1,
+        p_unit_id => 13,
+        p_staff_id => 5
+    );
+END;
+/
+
+
+SELECT * FROM issuance WHERE unit_id = 13;
+SELECT unit_id, status FROM blood_unit WHERE unit_id = 13;
+SELECT * FROM audit_log ORDER BY audit_id DESC FETCH FIRST 1 ROW ONLY;
+
+
+
+CREATE OR REPLACE TRIGGER trg_donation_eligibility
+BEFORE INSERT ON donation
+FOR EACH ROW
+DECLARE
+    v_last_donation_date DATE;
+BEGIN
+    -- Fetch last donation date
+    SELECT last_donation_date
+    INTO v_last_donation_date
+    FROM donor
+    WHERE donor_id = :NEW.donor_id;
+
+    -- Check 90-day rule using the NEW donation date
+    IF v_last_donation_date IS NOT NULL
+       AND TRUNC(:NEW.donation_date) - TRUNC(v_last_donation_date) < 90 THEN
+       
+        RAISE_APPLICATION_ERROR(
+            -20020,
+            'Donor ' || :NEW.donor_id || 
+            ' is within 90-day deferral period'
+        );
+    END IF;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(
+            -20021,
+            'Donor ' || :NEW.donor_id || ' does not exist'
+        );
+END trg_donation_eligibility;
+/
+
+
+CREATE OR REPLACE TRIGGER trg_unit_release
+AFTER UPDATE ON screening
+FOR EACH ROW
+BEGIN
+    IF :NEW.hiv = 'NEGATIVE' AND :NEW.hbv = 'NEGATIVE' 
+       AND :NEW.hcv = 'NEGATIVE' AND :NEW.syphilis = 'NEGATIVE' 
+       AND :NEW.malaria = 'NEGATIVE' THEN
+        UPDATE blood_unit SET status = 'AVAILABLE'
+        WHERE unit_id = :NEW.unit_id AND status = 'QUARANTINE';
+    END IF;
+END;
+/
+
+
+CREATE OR REPLACE TRIGGER trg_audit_donor
+AFTER INSERT OR UPDATE ON donor
+FOR EACH ROW
+DECLARE
+    v_audit_id NUMBER;
+    v_op_type VARCHAR2(10);
+BEGIN
+    SELECT audit_seq.NEXTVAL INTO v_audit_id FROM dual;
+    
+    IF INSERTING THEN v_op_type := 'INSERT';
+    ELSIF UPDATING THEN v_op_type := 'UPDATE';
+    END IF;
+
+    INSERT INTO audit_log (audit_id, table_name, op_type, record_pk, old_value, new_value, changed_by)
+    VALUES (v_audit_id, 'donor', v_op_type, TO_CHAR(:NEW.donor_id),
+            CASE WHEN UPDATING THEN :OLD.full_name ELSE NULL END,
+            :NEW.full_name, USER);
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+
+CREATE OR REPLACE TRIGGER trg_audit_unit
+AFTER INSERT OR UPDATE ON blood_unit
+FOR EACH ROW
+DECLARE
+    v_audit_id NUMBER;
+    v_op_type VARCHAR2(10);
+BEGIN
+    SELECT audit_seq.NEXTVAL INTO v_audit_id FROM dual;
+    
+    IF INSERTING THEN v_op_type := 'INSERT';
+    ELSIF UPDATING THEN v_op_type := 'UPDATE';
+    END IF;
+
+    INSERT INTO audit_log (audit_id, table_name, op_type, record_pk, old_value, new_value, changed_by)
+    VALUES (v_audit_id, 'blood_unit', v_op_type, TO_CHAR(:NEW.unit_id),
+            CASE WHEN UPDATING THEN :OLD.status ELSE NULL END,
+            :NEW.status, USER);
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+CREATE OR REPLACE TRIGGER trg_audit_issuance
+AFTER INSERT ON issuance
+FOR EACH ROW
+DECLARE
+    v_audit_id NUMBER;
+BEGIN
+    SELECT audit_seq.NEXTVAL INTO v_audit_id FROM dual;
+
+    INSERT INTO audit_log (audit_id, table_name, op_type, record_pk, old_value, new_value, changed_by)
+    VALUES (v_audit_id, 'issuance', 'INSERT', TO_CHAR(:NEW.issuance_id),
+            NULL,
+            'Unit ' || :NEW.unit_id || ' issued for request ' || :NEW.request_id,
+            USER);
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+
+
+
+SELECT trigger_name, status FROM user_triggers ORDER BY trigger_name;
+
+
+
+
+BEGIN
+    -- Donor 2 last donated 2026-04-01, only 24 days ago — should fail
+    INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+    VALUES (donation_seq.NEXTVAL, 2, 2, SYSDATE, 350);
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Expected rejection: ' || SQLERRM);
+        ROLLBACK;
+END;
+/
+
+-- Insert a new donation from an eligible donor (Donor 1, last donated Oct 2025)
+INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+VALUES (donation_seq.NEXTVAL, 1, 2, DATE '2026-04-20', 350);
+
+-- Create a BloodUnit from that donation (in QUARANTINE)
+INSERT INTO blood_unit (unit_id, donation_id, component_id, collection_date, expiry_date, status)
+VALUES (unit_seq.NEXTVAL, (SELECT MAX(donation_id) FROM donation), 2, DATE '2026-04-20', DATE '2026-06-01', 'QUARANTINE');
+
+
+COMMIT;
+
+-- Now screen it with all NEGATIVE — should auto-flip to AVAILABLE
+INSERT INTO screening (screening_id, unit_id, hiv, hbv, hcv, syphilis, malaria, tested_on, tested_by)
+VALUES (screening_seq.NEXTVAL, (SELECT MAX(unit_id) FROM blood_unit), 
+        'NEGATIVE', 'NEGATIVE', 'NEGATIVE', 'NEGATIVE', 'NEGATIVE', SYSDATE, 3);
+
+
+COMMIT;
+
+
+
+SELECT 'Tables' AS item, COUNT(*) AS count FROM user_tables
+UNION ALL SELECT 'Sequences', COUNT(*) FROM user_sequences
+UNION ALL SELECT 'Functions', COUNT(*) FROM user_objects WHERE object_type = 'FUNCTION'
+UNION ALL SELECT 'Procedures', COUNT(*) FROM user_objects WHERE object_type = 'PROCEDURE'
+UNION ALL SELECT 'Triggers', COUNT(*) FROM user_triggers
+UNION ALL SELECT 'Audit rows', COUNT(*) FROM audit_log
+UNION ALL SELECT 'Issuances', COUNT(*) FROM issuance;
+
+
+
+SELECT object_type, object_name, status
+FROM user_objects
+WHERE object_type IN ('TABLE','SEQUENCE','FUNCTION','PROCEDURE','TRIGGER','VIEW')
+ORDER BY object_type, object_name;
+
+
+
+SELECT donor_id, full_name, blood_group,
+       FLOOR(MONTHS_BETWEEN(SYSDATE, dob)/12) AS age,
+       TO_CHAR(last_donation_date, 'YYYY-MM-DD') AS last_donation
+FROM donor ORDER BY donor_id;
+
+SELECT d.blood_group,
+       c.name AS component,
+       COUNT(bu.unit_id)        AS available_units,
+       MIN(bu.expiry_date)      AS expires_soonest
+FROM blood_unit bu
+JOIN component c   ON bu.component_id = c.component_id
+JOIN donation don  ON bu.donation_id  = don.donation_id
+JOIN donor d       ON don.donor_id    = d.donor_id
+WHERE bu.status = 'AVAILABLE'
+GROUP BY d.blood_group, c.name
+ORDER BY d.blood_group, c.name;
+
+
+
+SELECT 'O+'  AS recipient, get_compatible_groups('O+')  AS compatible_donor_groups FROM dual
+UNION ALL SELECT 'AB+', get_compatible_groups('AB+') FROM dual
+UNION ALL SELECT 'O-',  get_compatible_groups('O-')  FROM dual
+UNION ALL SELECT 'A-',  get_compatible_groups('A-')  FROM dual;
+
+
+
+SELECT * FROM issuance ORDER BY issuance_id;
+
+
+SELECT unit_id, status FROM blood_unit WHERE unit_id = 13;
+
+
+BEGIN
+    INSERT INTO donation (donation_id, donor_id, staff_id, donation_date, volume_ml)
+    VALUES (donation_seq.NEXTVAL, 2, 2, SYSDATE, 350);
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Trigger correctly rejected: ' || SQLERRM);
+END;
+/
+
+
+
+
+SELECT table_name, op_type, COUNT(*) AS event_count
+FROM audit_log
+GROUP BY table_name, op_type
+ORDER BY table_name, op_type;
+
+
+
+
+
+
+
+
+
+
+SELECT r.request_id,
+       rec.full_name AS recipient,
+       rec.blood_group,
+       h.name        AS hospital,
+       c.name        AS component_needed,
+       r.units_needed,
+       r.urgency,
+       COUNT(bu.unit_id) AS compatible_available
+FROM request r
+JOIN recipient rec ON r.recipient_id = rec.recipient_id
+JOIN hospital h    ON rec.hospital_id = h.hospital_id
+JOIN component c   ON r.component_id  = c.component_id
+LEFT JOIN blood_unit bu ON bu.component_id = r.component_id
+    AND bu.status = 'AVAILABLE'
+    AND bu.donation_id IN (
+        SELECT don.donation_id FROM donation don
+        JOIN donor d ON don.donor_id = d.donor_id
+        WHERE d.blood_group IN (
+            SELECT donor_group FROM blood_compatibility
+            WHERE recipient_group = rec.blood_group))
+WHERE r.status = 'OPEN'
+GROUP BY r.request_id, rec.full_name, rec.blood_group,
+         h.name, c.name, r.units_needed, r.urgency
+ORDER BY r.urgency DESC, MAX(r.request_date) DESC;
+
+
+
+SELECT c.component_id,
+       c.name,
+       c.shelf_life_days,
+       COUNT(bu.unit_id)    AS total_units,
+       COUNT(CASE WHEN bu.status = 'AVAILABLE' THEN 1 END)
+                            AS available_units,
+       ROUND(AVG(bu.expiry_date - bu.collection_date), 1)
+                            AS avg_stored_days,
+       ROUND(100 * AVG(bu.expiry_date - bu.collection_date)
+             / c.shelf_life_days, 1) AS avg_pct_shelf_used
+FROM component c
+LEFT JOIN blood_unit bu ON c.component_id = bu.component_id
+GROUP BY c.component_id, c.name, c.shelf_life_days
+ORDER BY c.component_id;
+
+
+
+
+
